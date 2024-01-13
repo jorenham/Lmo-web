@@ -8,7 +8,7 @@ module.exports = {
     // enable highlight feature
     highlight: true,
     // enable instant update
-    injectBody: false,
+    injectBody: true,
     // enable remoteLogs
     remoteLogs: true,
     // disable injecting css
