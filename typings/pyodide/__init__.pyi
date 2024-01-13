@@ -1,0 +1,3 @@
+from typing import Final as _Final
+
+__version__: _Final[str] = ...
