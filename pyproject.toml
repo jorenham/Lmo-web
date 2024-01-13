@@ -1,0 +1,81 @@
+[build-system]
+requires = ["poetry-core", "oldest-supported-numpy"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+name = "Lmo-web"
+version = "0.0.1"
+description = "Visual probability distribution & L-moment playground"
+authors = ["Joren Hammudoglu <jhammudoglu@gmail.com>"]
+readme = "README.md"
+license = "BSD-3-Clause"
+homepage = "https://jorenham.github.io/Lmo-web/"
+repository = "https://github.com/jorenham/Lmo-web/"
+
+[tool.poetry.urls]
+Documentation = "https://jorenham.github.io/Lmo-web/"
+"Bug Tracker" = "https://github.com/jorenham/Lmo-web/issues"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+plotly = "^5.18"
+scipy = "^1.11"
+Lmo = ">=0.12,<1.0"
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1"
+ruff = ">=0.1.6,<1.0"
+codespell = "^2.2"
+
+[tool.pyright]
+include = ["lmo_web"]
+exclude = [
+    "**/__pycache__",
+    "**/.ruff_cache",
+    ".vscode",
+    ".git",
+    ".github",
+]
+venv = ".venv"
+pythonVersion = "3.11"
+
+
+[tool.ruff]
+extend-exclude = [
+    ".github",
+    ".vscode",
+]
+line-length = 79
+src = ["lmo_web"]
+target-version = "py311"
+task-tags = ["TODO", "Todo"]
+typing-modules = ["numpy.typing"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ignore-decorators = [
+    "typing.overload",
+]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.isort]
+case-sensitive = true
+combine-as-imports = true
+force-wrap-aliases = true
+known-first-party = ["lmo"]
+known-third-party = [
+    "js",
+    "pyodide",
+    "pyscript",
+    "pyweb",
+    "plotly",
+    "numpy",
+    "scipy",
+    "lmo",
+]
+
+[tool.codespell]
+context = 2

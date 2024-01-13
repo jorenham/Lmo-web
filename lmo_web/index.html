@@ -1,0 +1,359 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Lmo distribution explorer</title>
+
+        <!-- Bootstrap -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+        >
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"
+        ></script>
+
+        <!-- Dark mode switcher -->
+        <script>
+            /*!
+             * Color mode toggler for Bootstrap's docs (https://getbootstrap.com/)
+             * Copyright 2011-2023 The Bootstrap Authors
+             * Licensed under the Creative Commons Attribution 3.0 Unported License.
+             */
+
+            (() => {
+                'use strict'
+
+                const getStoredTheme = () => localStorage.getItem('theme')
+                const setStoredTheme = theme => localStorage.setItem('theme', theme)
+
+                const getPreferredTheme = () => {
+                    const storedTheme = getStoredTheme()
+                    if (storedTheme) {
+                        return storedTheme
+                    }
+
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+                }
+
+                const setTheme = theme => {
+                    if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        document.documentElement.setAttribute('data-bs-theme', 'dark')
+                    } else {
+                        document.documentElement.setAttribute('data-bs-theme', theme)
+                    }
+                }
+
+                setTheme(getPreferredTheme())
+
+                const showActiveTheme = (theme, focus = false) => {
+                    const themeSwitcher = document.querySelector('#bd-theme')
+
+                    if (!themeSwitcher) {
+                        return
+                    }
+
+                    const themeSwitcherText = document.querySelector('#bd-theme-text')
+                    const activeThemeIcon = document.querySelector('.theme-icon-active use')
+                    const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+                    const svgOfActiveBtn = btnToActive.querySelector('svg use').getAttribute('href')
+
+                    document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+                        element.classList.remove('active')
+                        element.setAttribute('aria-pressed', 'false')
+                    })
+
+                    btnToActive.classList.add('active')
+                    btnToActive.setAttribute('aria-pressed', 'true')
+                    activeThemeIcon.setAttribute('href', svgOfActiveBtn)
+                    const themeSwitcherLabel = `${themeSwitcherText.textContent} (${btnToActive.dataset.bsThemeValue})`
+                    themeSwitcher.setAttribute('aria-label', themeSwitcherLabel)
+
+                    if (focus) {
+                        themeSwitcher.focus()
+                    }
+                }
+
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    const storedTheme = getStoredTheme()
+                    if (storedTheme !== 'light' && storedTheme !== 'dark') {
+                        setTheme(getPreferredTheme())
+                    }
+                })
+
+                window.addEventListener('DOMContentLoaded', () => {
+                    showActiveTheme(getPreferredTheme())
+
+                    document.querySelectorAll('[data-bs-theme-value]')
+                        .forEach(toggle => {
+                            toggle.addEventListener('click', () => {
+                                const theme = toggle.getAttribute('data-bs-theme-value')
+                                console.log('toggle theme')
+                                setStoredTheme(theme)
+                                setTheme(theme)
+                                showActiveTheme(theme, true)
+                            })
+                        })
+                })
+            })()
+        </script>
+
+        <!-- Bootstrap Icons -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+            rel="stylesheet"
+            crossorigin="anonymous"
+        >
+
+        <!-- PyScript -->
+        <link
+            href="https://pyscript.net/releases/2024.1.1/core.css"
+            rel="stylesheet"
+            crossorigin="anonymous"
+        >
+        <script
+            type="module"
+            src="https://pyscript.net/releases/2024.1.1/core.js"
+            crossorigin="anonymous"
+        ></script>
+
+        <!-- Plotly style overrides -->
+        <style>
+            .xtick > text,
+            .ytick > text {
+                fill: var(--bs-body-color) !important;
+            }
+
+            .xgrid,
+            .ygrid {
+                stroke: var(--bs-secondary-bg) !important;
+            }
+
+            .zerolinelayer > .zl {
+                stroke: var(--bs-border-color) !important;
+            }
+        </style>
+    </head>
+
+    <body class="vh-100 d-flex flex-column overflow-x-hidden overflow-y-hidden">
+        <header>
+            <nav class="navbar navbar-expand bg-secondary">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <img
+                            src="https://jorenham.github.io/Lmo/img/logo.png"
+                            width="30"
+                            height="30"
+                            alt="Lmo"
+                        />
+                    </a>
+                    <ul class="navbar-nav">
+                        <li class="nav-item col-6 col-lg-auto">
+                            <a
+                                class="nav-link py-2 px-0 px-lg-2"
+                                href="https://github.com/jorenham/Lmo"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                <i class="bi-github"></i>
+                                <small class="d-lg-none ms-2">GitHub</small>
+                            </a>
+                        </li>
+
+                        <li class="nav-item py-2 py-lg-1 col-12 col-lg-auto">
+                            <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white"></div>
+                            <hr class="d-lg-none my-2 text-white-50">
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                                <symbol id="circle-half" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+                                </symbol>
+                                <symbol id="moon-fill" viewBox="0 0 16 16">
+                                    <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
+                                </symbol>
+                                <symbol id="sun-fill" viewBox="0 0 16 16">
+                                    <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+                                </symbol>
+                            </svg>
+
+                            <button
+                                class="btn btn-link nav-link py-2 px-0 px-lg-2 dropdown-toggle d-flex align-items-center"
+                                id="bd-theme"
+                                type="button"
+                                aria-expanded="false"
+                                data-bs-toggle="dropdown"
+                                data-bs-display="static"
+                                aria-label="Toggle theme (auto)"
+                            >
+                                <svg class="bi my-1 theme-icon-active" width="16" height="16" fill="currentColor">
+                                    <use href="#circle-half"></use>
+                                </svg>
+                                <span class="d-lg-none ms-2" id="bd-theme-text">Toggle theme</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme-text">
+                                <li>
+                                    <button
+                                        type="button"
+                                        class="dropdown-item d-flex align-items-center"
+                                        data-bs-theme-value="light"
+                                        aria-pressed="false"
+                                    >
+                                        <svg class="bi me-2 opacity-50 theme-icon" width="16" height="16" fill="currentColor">
+                                            <use href="#sun-fill"></use>
+                                        </svg>
+                                        Light
+                                        <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        class="dropdown-item d-flex align-items-center"
+                                        data-bs-theme-value="dark"
+                                        aria-pressed="false"
+                                    >
+                                        <svg class="bi me-2 opacity-50 theme-icon" width="16" height="16" fill="currentColor">
+                                            <use href="#moon-fill"></use>
+                                        </svg>
+                                        Dark
+                                        <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        class="dropdown-item d-flex align-items-center active"
+                                        data-bs-theme-value="auto"
+                                        aria-pressed="true"
+                                    >
+                                        <svg class="bi me-2 opacity-50 theme-icon" width="16" height="16" fill="currentColor">
+                                            <use href="#circle-half"></use>
+                                        </svg>
+                                        Auto
+                                        <svg class="bi ms-auto d-none"><use href="#check2"></use></svg>
+                                    </button>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <main class="container-fluid d-flex p-0 flex-grow-1 w-100">
+            <aside
+                class="overflow-y-auto d-flex flex-column flex-shrink-1 bg-secondary-subtle shadow"
+                style="width: 24rem;"
+            >
+                <div id="rv_placeholders" class="p-3 placeholder-glow">
+                    <span class="placeholder placeholder-lg col-10 mb-1"></span>
+                    <span class="col-2 text-muted text-end">(</span>
+                    <span class="placeholder col-3 ms-4 mb-1"></span><br>
+                    <span class="placeholder col-4 ms-4 mb-1"></span><br>
+                    <span class="font-monospace text-muted">).</span>
+                    <span class="placeholder placeholder-lg col-2"></span>
+                    <span class="font-monospace text-muted">()</span>
+                </div>
+                <form id="rv" class="p-3 d-none">
+                    <fieldset id="rv_0">
+                        <div class="font-monospace">
+                            <select
+                                id="rv_0_name"
+                                name="rv-0-name"
+                                class="select-rv p-0 m-0 bg-secondary-subtle border-0"
+                            >
+                            </select><span class="text-muted">(</span>
+                        </div>
+
+                        <div id="rv_0_params" class="ps-4 font-monospace">
+                            <div>
+                                <span class="text-muted">loc =</span>
+                                <span
+                                    id="rv_0_params_-2"
+                                    contenteditable
+                                    class="border-2 border-bottom"
+                                    role="textbox"
+                                >0.0</span><span class="text-muted">,</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">scale =</span>
+                                <span
+                                    id="rv_0_params_-1"
+                                    contenteditable
+                                    class="border-2 border-bottom"
+                                    role="textbox"
+                                >1.0</span><span class="text-muted">,</span>
+                            </div>
+                        </div>
+
+                        <div class="font-monospace">
+                            <span
+                                class="text-muted"
+                            >).</span><select
+                                id="rv_0_func"
+                                name="rv-0-func"
+                                class="select-func p-0 m-0 bg-secondary-subtle border-0"
+                            >
+                            </select><span
+                                class="text-muted"
+                            >()</span>
+                        </div>
+                    </fieldset>
+                </form>
+
+                <footer class="d-flex flex-column text-center mt-auto pb-3">
+                    <span class="text-secondary">
+                        Powered by
+                    </span>
+                    <a
+                        href="https://github.com/jorenham/Lmo"
+                        class="link-body-emphasis link-underline-opacity-0 lead"
+                        target="_blank"
+                    >
+                        Lmo
+                    </a>
+                </footer>
+            </aside>
+
+            <div id="chart" class="w-100"></div>
+        </main>
+
+        <!-- Custom -->
+        <script type="py" src="./main.py" config="./pyscript.toml"></script>
+
+        <!-- I'm sorry PyScript, you're a bit ugly, but I still love you -->
+        <script>
+            (() => {
+                'use strict'
+                window.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('body > div[style]').forEach(e => e.remove())
+                    document.querySelector('body > svg[style]').remove()
+                })
+            })()
+        </script>
+
+        <!-- MathJax 2 (plotly requirement) -->
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+
+        <!-- MathJax 3 (plotly requirement) -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+            crossorigin="anonymous"
+        ></script>
+
+        <!-- Plotly.js -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2/plotly.min.js"
+            crossorigin="anonymous"
+        ></script>
+    </body>
+</html>
