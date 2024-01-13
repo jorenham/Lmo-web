@@ -12,13 +12,10 @@ import plotly.graph_objects as go
 
 import js
 from pyodide.ffi import to_js as _to_js
-from pyscript import when
+from pyscript import document, when, window
 from pyweb import pydom
 
 from lmo_web.web_storage import local_storage
-
-
-rv_continuous_frozen: type[object] = type(distributions.norm())
 
 NUM_x = 1000
 MIN_x = -10
@@ -61,23 +58,25 @@ TEX_L_STATS = r'''$
 \end{{align*}}
 $'''.strip()
 
-RVS: Mapping[str, rv_continuous_frozen] = {}
+RVS: Mapping[str, distributions.rv_frozen] = {}
 
 
 # redirect warnings to the console
-warnings.showwarning = lambda *a, file=None, **k: js.console.warn(warnings.formatwarning(*a, **k))
+warnings.showwarning = lambda *a, file=None, **k: js.console.warn(  # type: ignore
+    warnings.formatwarning(*a, **k)
+)
 
 
 def to_js(data):
     if data is None or isinstance(data, (bool, int, float, str, bytes)):
         return data
-    return _to_js(data, dict_converter=js.Object.fromEntries)
+    return _to_js(data, dict_converter=window.Object.fromEntries)
 
 
 def fig_to_js(fig, config=None):
     data_json = fig.to_json(validate=False)
     if not config:
-        return js.JSON.parse(data_json)
+        return window.JSON.parse(data_json)
 
     if not isinstance(config, dict):
         raise TypeError(f'config must be a dict or None, got {type(config)}')
@@ -89,7 +88,7 @@ def fig_to_js(fig, config=None):
 
 def show_plot(fig, target='chart', config=CONFIG):
     # https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
-    return js.window.Plotly.react(target, fig_to_js(fig, config=config))
+    return window.Plotly.react(target, fig_to_js(fig, config=config))
 
 
 def init_state() -> None:
@@ -159,7 +158,7 @@ def init_panel():
 
 
 
-def plotting_positions(X: rv_continuous_frozen, n: int = NUM_x):
+def plotting_positions(X: distributions.rv_frozen, n: int = NUM_x):
     a, b = X.support()
     lb, ub = np.isfinite(a), np.isfinite(b)
 
@@ -200,7 +199,7 @@ def check_l_stats(l_stats, trim=(0, 0)):
     return np.all((t >= t_min) & (t <= t_max))
 
 
-def _annotate_l_stats(X: rv_continuous_frozen, fig, trim=(0, 0)):
+def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
     *_, loc, scale = X.args
     lb, ub = np.isfinite(X.support())
 
@@ -273,7 +272,7 @@ def _annotate_l_stats(X: rv_continuous_frozen, fig, trim=(0, 0)):
     )
 
 
-def get_rv(i: int) -> rv_continuous_frozen:
+def get_rv(i: int) -> distributions.rv_frozen:
     rv_state = local_storage['state']['rv'][i]
     args = rv_state['params']
     return RVS[rv_state['name']](*args)
@@ -304,11 +303,9 @@ def update_plot(i: int):
     if func == 'pdf':
         y = X.pdf(x)
         fname = '$f(x)$'
-        ymax = None
     elif func == 'cdf':
         y = X.cdf(x)
         fname = '$F(x)$'
-        ymax = 1.01
     else:
         raise TypeError(func)
 
@@ -500,7 +497,6 @@ except BaseException as e:
     import traceback
     tb = ''.join(traceback.TracebackException.from_exception(e).format())
 
-    js.console.error(tb)
-    js.document.body.innerHTML = f'<pre>{tb}</pre>'
+    document.body.innerHTML = f'<pre>{tb}</pre>'
 
     raise
