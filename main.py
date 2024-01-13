@@ -8,14 +8,14 @@ from lmo.diagnostic import l_ratio_bounds
 from scipy.stats import distributions
 
 import plotly.graph_objects as go
-import plotly.io as pio
+# import plotly.io as pio
 
 import js
 from pyodide.ffi import to_js as _to_js
 from pyscript import when
 from pyweb import pydom
 
-from web_storage import local_storage
+from lmo_web.web_storage import local_storage
 
 
 rv_continuous_frozen: type[object] = type(distributions.norm())

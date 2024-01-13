@@ -9,7 +9,7 @@ import json
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import Final, TypeAlias, TypeVar
 
-import js
+from pyscript import window
 
 # https://github.com/python/typing/issues/182#issuecomment-1320974824
 JSON: TypeAlias = (
@@ -61,5 +61,5 @@ class Storage(MutableMapping[str, V]):
         self._storage.clear()
 
 
-local_storage: Final[Storage] = Storage(js.localStorage)
-session_storage: Final[Storage] = Storage(js.sessionStorage)
+local_storage: Final[Storage] = Storage(window.localStorage)
+session_storage: Final[Storage] = Storage(window.sessionStorage)
