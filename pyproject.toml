@@ -29,7 +29,7 @@ ruff = ">=0.1.6,<1.0"
 codespell = "^2.2"
 
 [tool.pyright]
-include = ["lmo_web"]
+include = ["lmo_web", "typings"]
 exclude = [
     "**/__pycache__",
     "**/.ruff_cache",
@@ -37,8 +37,11 @@ exclude = [
     ".git",
     ".github",
 ]
+stubPath = "./typings"
 venv = ".venv"
 pythonVersion = "3.11"
+
+reportMissingModuleSource = false
 
 
 [tool.ruff]
@@ -65,7 +68,7 @@ inline-quotes = "single"
 case-sensitive = true
 combine-as-imports = true
 force-wrap-aliases = true
-known-first-party = ["lmo"]
+known-first-party = ["lmo_web"]
 known-third-party = [
     "js",
     "pyodide",
