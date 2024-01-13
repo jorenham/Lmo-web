@@ -1,6 +1,5 @@
 import json
 import warnings
-from collections.abc import Mapping
 
 import lmo  # noqa: F401
 import numpy as np
@@ -8,11 +7,10 @@ from lmo.diagnostic import l_ratio_bounds
 from scipy.stats import distributions
 
 import plotly.graph_objects as go
-# import plotly.io as pio
 
 import js
 from pyodide.ffi import to_js as _to_js
-from pyscript import document, when, window
+from pyscript import when
 from pyweb import pydom
 
 from lmo_web.web_storage import local_storage
@@ -58,7 +56,7 @@ TEX_L_STATS = r'''$
 \end{{align*}}
 $'''.strip()
 
-RVS: Mapping[str, distributions.rv_frozen] = {}
+RVS: dict[str, distributions.rv_continuous] = {}
 
 
 # redirect warnings to the console
@@ -70,13 +68,13 @@ warnings.showwarning = lambda *a, file=None, **k: js.console.warn(  # type: igno
 def to_js(data):
     if data is None or isinstance(data, (bool, int, float, str, bytes)):
         return data
-    return _to_js(data, dict_converter=window.Object.fromEntries)
+    return _to_js(data, dict_converter=js.Object.fromEntries)
 
 
 def fig_to_js(fig, config=None):
     data_json = fig.to_json(validate=False)
     if not config:
-        return window.JSON.parse(data_json)
+        return js.JSON.parse(data_json)
 
     if not isinstance(config, dict):
         raise TypeError(f'config must be a dict or None, got {type(config)}')
@@ -88,7 +86,8 @@ def fig_to_js(fig, config=None):
 
 def show_plot(fig, target='chart', config=CONFIG):
     # https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
-    return window.Plotly.react(target, fig_to_js(fig, config=config))
+    data = fig_to_js(fig, config=config)
+    return js.Plotly.react(target, data)  # type: ignore
 
 
 def init_state() -> None:
@@ -109,10 +108,10 @@ def init_rvs():
             continue
 
         name = attr[:-4]
-        rv = getattr(distributions, name, None)
+        rv = getattr(distributions, name)
 
         # TODO: support rv's with shape params
-        if rv._shape_info():
+        if rv._shape_info():  # type: ignore
             continue
 
         # TODO: support discrete rv's
@@ -216,7 +215,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         # https://github.com/jorenham/Lmo/issues/142
         l_stats = [np.nan] * 4
     else:
-        l_stats = X.l_stats(trim=trim)
+        l_stats = X.l_stats(trim=trim)  # type: ignore
 
         # find the minimum trim that result in valid L-stats
         # increment trim on the unbounded side(s) until valid L-stats
@@ -234,7 +233,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
             #     trim = min(trim), min(trim)
             trim = trim[0] + 1 - int(lb), trim[1] + 1 - int(ub)
 
-            l_stats = X.l_stats(trim=trim)
+            l_stats = X.l_stats(trim=trim)  # type: ignore
 
     if trim == (0, 0):
         trim_str = ''
@@ -301,7 +300,7 @@ def update_plot(i: int):
 
     func = local_storage['state']['rv'][i]['func']
     if func == 'pdf':
-        y = X.pdf(x)
+        y = X.pdf(x)  # type: ignore
         fname = '$f(x)$'
     elif func == 'cdf':
         y = X.cdf(x)
@@ -403,7 +402,7 @@ def on_rv_change(event):
     params_new = [0.0, 1.0]
 
     rv = RVS[name_new]
-    if rv._shape_info():
+    if rv._shape_info(): # type: ignore
         # TODO: initial shape param values;
         # see ._fitstart() or something
         raise NotImplementedError('shape parameters not supported')
@@ -486,17 +485,9 @@ def on_func_change(event):
     update_plot(rv_ix)
 
 
-try:
-    init_state()
-    init_rvs()
-    init_funcs()
-    init_panel()
+init_state()
+init_rvs()
+init_funcs()
+init_panel()
 
-    update_plot(0)
-except BaseException as e:
-    import traceback
-    tb = ''.join(traceback.TracebackException.from_exception(e).format())
-
-    document.body.innerHTML = f'<pre>{tb}</pre>'
-
-    raise
+update_plot(0)
