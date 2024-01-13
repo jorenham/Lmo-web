@@ -41,17 +41,17 @@ class Storage(MutableMapping[str, V]):
         for i in range(storage.length):
             yield storage.key(i)
 
-    def __contains__(self, key: str) -> bool:
+    def __contains__(self, key: object) -> bool:
         return self._storage.getItem(key) is not None
 
-    def __getitem__(self, key: str) -> JSON:
+    def __getitem__(self, key: str) -> V:
         value = self._storage.getItem(key)
         if value is None:
             raise KeyError(key)
 
         return json.loads(value)
 
-    def __setitem__(self, key: str, value: JSON) -> None:
+    def __setitem__(self, key: str, value: V) -> None:
         self._storage.setItem(key, json.dumps(value))
 
     def __delitem__(self, key: str) -> None:
@@ -61,5 +61,5 @@ class Storage(MutableMapping[str, V]):
         self._storage.clear()
 
 
-local_storage: Final[Storage] = Storage(window.localStorage)
-session_storage: Final[Storage] = Storage(window.sessionStorage)
+local_storage: Final[Storage] = Storage(window.localStorage)  # type: ignore
+session_storage: Final[Storage] = Storage(window.sessionStorage) # type: ignore
