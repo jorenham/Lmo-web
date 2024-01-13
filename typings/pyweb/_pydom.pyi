@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from typing import Final, Self, SupportsIndex, TypeAlias, overload
 
 from pyodide.ffi import JsProxy
@@ -120,7 +120,7 @@ class StyleCollection:
     def __setitem__(self, key: SupportsIndex, value: str): ...
     def remove(self, key: SupportsIndex) -> None: ...
 
-class ElementCollection:
+class ElementCollection(Iterator[Element]):
     _elements: Sequence[Element]
     style: Final[StyleCollection]
 
@@ -170,14 +170,11 @@ class PyDom(BaseElement):
     @overload
     def __getitem__(self, key: int | slice) -> list[Element]: ...
     @overload
-    def __getitem__(self, key: str) -> ElementCollection | None: ...
+    def __getitem__(self, key: str) -> ElementCollection: ...
     def create(  # type: ignore
         self,
         type_: str,
         *,
         classes: Iterable[str] | None = ...,
         html: str | None = ...,
-    ) -> Self: ...
-
-
-dom: Final[PyDom]
+    ) -> Element: ...
