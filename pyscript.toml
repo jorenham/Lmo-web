@@ -3,7 +3,7 @@ interpreter = "0.24.1"
 packages = [
     "plotly>=5.18,<6.0",
     "scipy>=1.11,<2.0",
-    "Lmo>=0.12,<1.0",
+    "Lmo>=0.12.1,<1.0",
 ]
 
 [files]

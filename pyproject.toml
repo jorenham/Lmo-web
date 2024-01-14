@@ -21,7 +21,7 @@ Documentation = "https://jorenham.github.io/Lmo-web/"
 python = ">=3.11,<3.12"
 plotly = "^5.18"
 scipy = "^1.11"
-Lmo = ">=0.12,<1.0"
+Lmo = ">=0.12.1,<1.0"
 
 [tool.poetry.group.dev.dependencies]
 pyright = "^1.1"

@@ -210,30 +210,25 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         assert not (lb and ub)
         trim = 1 - int(lb), 1 - int(ub)
 
-    if X.dist.name == 'wald':
-        # workaround for `scipy.stats.wald`, see:
-        # https://github.com/jorenham/Lmo/issues/142
-        l_stats = [np.nan] * 4
-    else:
+    l_stats = X.l_stats(trim=trim)  # type: ignore
+
+    # find the minimum trim that result in valid L-stats
+    # increment trim on the unbounded side(s) until valid L-stats
+    while (
+        abs(l_stats[2]) >= 1 or abs(l_stats[3]) >= 1
+        or not check_l_stats(l_stats, trim)
+    ):
+        assert not (lb and ub) and max(trim) < 100
+
+        # if lb and trim[0] >= 1:
+        #     trim = trim[0] - 1, trim[1]
+        # elif ub and trim[1] >= 1:
+        #     trim = trim[0], trim[1] - 1
+        # elif ub and lb and trim[0] != trim[1]:
+        #     trim = min(trim), min(trim)
+        trim = trim[0] + 1 - int(lb), trim[1] + 1 - int(ub)
+
         l_stats = X.l_stats(trim=trim)  # type: ignore
-
-        # find the minimum trim that result in valid L-stats
-        # increment trim on the unbounded side(s) until valid L-stats
-        while (
-            abs(l_stats[2]) >= 1 or abs(l_stats[3]) >= 1
-            or not check_l_stats(l_stats, trim)
-        ):
-            assert not (lb and ub) and max(trim) < 100
-
-            # if lb and trim[0] >= 1:
-            #     trim = trim[0] - 1, trim[1]
-            # elif ub and trim[1] >= 1:
-            #     trim = trim[0], trim[1] - 1
-            # elif ub and lb and trim[0] != trim[1]:
-            #     trim = min(trim), min(trim)
-            trim = trim[0] + 1 - int(lb), trim[1] + 1 - int(ub)
-
-            l_stats = X.l_stats(trim=trim)  # type: ignore
 
     if trim == (0, 0):
         trim_str = ''

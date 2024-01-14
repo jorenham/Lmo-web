@@ -19,13 +19,13 @@ types = ["chardet (>=5.1.0)", "mypy", "pytest", "pytest-cov", "pytest-dependency
 
 [[package]]
 name = "lmo"
-version = "0.12.0"
+version = "0.12.1"
 description = "L-Moments for robust statistics."
 optional = false
 python-versions = ">=3.10,<3.13"
 files = [
-    {file = "lmo-0.12.0-py3-none-any.whl", hash = "sha256:f87234fb70d58c47875064d6f3f2c90b7584ae560c94c4ac79ec23f213d21d80"},
-    {file = "lmo-0.12.0.tar.gz", hash = "sha256:56c72a8ff9f4caccc715301e90f329d01ea76065fbe1210ad4ade299125d5d33"},
+    {file = "lmo-0.12.1-py3-none-any.whl", hash = "sha256:8c836f471a131383ea8aba870b1949b8595e7438b33aa413edb7b6c1514a7e92"},
+    {file = "lmo-0.12.1.tar.gz", hash = "sha256:432f3e68928f2a796a36b2c706e85b8be17c0741ffb84391ec0cbdba077a4029"},
 ]
 
 [package.dependencies]
@@ -239,4 +239,4 @@ doc = ["reno", "sphinx", "tornado (>=4.5)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "8bccf6f8aac2e8afdca21b327e42babdb532f80289d6b81f1e11ce5aca39fa4c"
+content-hash = "8579c5c999c462a6fe0ddb13780f3bf8147e3de5fe1f03e081a0bead7ef95912"
