@@ -1,71 +1,28 @@
-__all__ = "Console", "PyodideConsole", "BANNER", "repr_shorten", "ConsoleFuture"
+# https://github.com/pyodide/pyodide/blob/main/src/py/pyodide/console.py
+
+__all__ = (
+    'BANNER',
+    'Console',
+    'ConsoleFuture',
+    'PyodideConsole',
+    'repr_shorten',
+)
 
 from asyncio import Future
-from codeop import CommandCompiler, Compile
 from collections.abc import Callable, Generator
-from contextlib import _RedirectStream, contextmanager
+from contextlib import contextmanager
 from types import TracebackType
-from typing import Any, ClassVar, Final, Literal, TypeAlias
+from typing import Any, Final, Literal, override
 
-from pyodide.code import CodeRunner, ReturnMode
+from pyodide.code import CodeRunner
 
-ConsoleFutureStatus: TypeAlias = Literal["incomplete", "syntax-error", "complete"]
+type ConsoleFutureStatus = Literal['incomplete', 'syntax-error', 'complete']
 
 INCOMPLETE: Final[ConsoleFutureStatus] = ...
 SYNTAX_ERROR: Final[ConsoleFutureStatus] = ...
 COMPLETE: Final[ConsoleFutureStatus] = ...
 
 BANNER: Final[str] = ...
-
-class redirect_stdin(_RedirectStream[Any]):
-    _stream: ClassVar[str] = ...
-
-class _WriteStream:
-    def __init__(
-        self,
-        write_handler: Callable[[str], Any],
-        name: str | None = ...,
-    ) -> None: ...
-    def write(self, text: str) -> None: ...
-    def flush(self) -> None: ...
-    def isatty(self) -> bool: ...
-class _ReadStream:
-    def __init__(
-        self,
-        read_handler: Callable[[int], str],
-        name: str | None = ...,
-    ) -> None: ...
-    def readline(self, n: int = ...) -> str: ...
-    def flush(self) -> None: ...
-    def isatty(self) -> bool: ...
-class _Compile(Compile):
-    def __init__(
-        self,
-        *,
-        return_mode: ReturnMode = ...,
-        quiet_trailing_semicolon: bool = ...,
-        flags: int = ...,
-    ) -> None: ...
-    def __call__(  # type: ignore
-        self,
-        source: str,
-        filename: str,
-        symbol: str,
-    ) -> CodeRunner: ...
-class _CommandCompiler(CommandCompiler):
-    def __init__(
-        self,
-        *,
-        return_mode: ReturnMode = ...,
-        quiet_trailing_semicolon: bool = ...,
-        flags: int = ...,
-    ) -> None: ...
-    def __call__(  # type: ignore
-        self,
-        source: str,
-        filename: str = ...,
-        symbol: str = ...,
-    ) -> CodeRunner | None: ...
 
 class ConsoleFuture(Future[Any]):
     syntax_check: ConsoleFutureStatus
@@ -83,7 +40,7 @@ class Console:
 
     def __init__(
         self,
-        globals: dict[str, Any] | None = ...,
+        globals: dict[str, Any] | None = ...,  # noqa: A002
         *,
         stdin_callback: Callable[[int], str] | None = ...,
         stdout_callback: Callable[[str], None] | None = ...,
@@ -101,7 +58,9 @@ class Console:
     def formattraceback(self, e: BaseException) -> str: ...
     def push(self, line: str) -> ConsoleFuture: ...
     def complete(self, source: str) -> tuple[list[str], int]: ...
+
 class PyodideConsole(Console):
+    @override
     async def runcode(
         self,
         source: str,
@@ -121,4 +80,3 @@ def repr_shorten(
     split: int | None = ...,
     separator: str = ...,
 ) -> str: ...
-

@@ -1,34 +1,47 @@
-__all__ = 'WebLoop', 'WebLoopPolicy', 'PyodideFuture', 'PyodideTask'
+__all__ = 'PyodideFuture', 'PyodideTask', 'WebLoop', 'WebLoopPolicy'
 
-import asyncio
-from collections.abc import Awaitable, Callable
-from typing import Any, Coroutine, TypeVar, overload
+import asyncio as _asyncio
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import Any, Self, override
 
-T = TypeVar('T')
-S = TypeVar('S')
+type _Handler[V, R] = Callable[[V], Awaitable[R]] | Callable[[V], R]
 
-class PyodideFuture(asyncio.Future[T]):
-    @overload
-    def then(self, onfulfilled: None, onrejected: Callable[[BaseException], Awaitable[S]]) -> PyodideFuture[S]: ...
-    @overload
-    def then(self, onfulfilled: None, onrejected: Callable[[BaseException], S]) -> PyodideFuture[S]: ...
-    @overload
-    def then(self, onfulfilled: Callable[[T], Awaitable[S]], onrejected: Callable[[BaseException], Awaitable[S]] | None = ...) -> PyodideFuture[S]: ...
-    @overload
-    def then(self, onfulfilled: Callable[[T], S], onrejected: Callable[[BaseException], S] | None = ...) -> PyodideFuture[S]: ...
-    @overload
-    def catch(self, onrejected: Callable[[BaseException], Awaitable[S]]) -> PyodideFuture[S]: ...
-    @overload
-    def catch(self, onrejected: Callable[[BaseException], S]) -> PyodideFuture[S]: ...
-    def finally_(self, onfinally: Callable[[], None]) -> PyodideFuture[T]: ...
+class PyodideFuture[T](_asyncio.Future[T]):
+    def then[S](
+        self,
+        onfulfilled: _Handler[T, S] | None,
+        onrejected: _Handler[BaseException, S] | None = ...,
+        /,
+    ) -> PyodideFuture[S]: ...
+    def catch[S](
+        self,
+        onrejected: _Handler[BaseException, S],
+        /,
+    ) -> PyodideFuture[S]: ...
+    def finally_(self, onfinally: Callable[[], None], /) -> Self: ...
 
-class PyodideTask(asyncio.Task[T], PyodideFuture[T]): ...
+class PyodideTask[T](_asyncio.Task[T], PyodideFuture[T]): ...
 
-class WebLoop(asyncio.AbstractEventLoop):
-    def run_in_executor(self, executor, func: Callable[..., T], *args: Any) -> PyodideFuture[T]: ...
+class WebLoop(_asyncio.AbstractEventLoop):
+    @override
     def create_future(self) -> PyodideFuture[Any]: ...
-    def create_task(self, coro: Coroutine[Any, None, T], *, name=...) -> PyodideTask[T]: ...  # type: ignore
+    @override
+    def create_task[T](  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        coro: Coroutine[Any, None, T],
+        *,
+        name: str | None = ...,
+    ) -> PyodideTask[T]: ...
+    @override
+    def run_in_executor[*Ts, R](
+        self,
+        executor: Any,
+        func: Callable[[*Ts], R],
+        *args: *Ts,
+    ) -> PyodideFuture[R]: ...
 
-class WebLoopPolicy(asyncio.DefaultEventLoopPolicy):
+class WebLoopPolicy(_asyncio.DefaultEventLoopPolicy):
+    @override
     def get_event_loop(self) -> WebLoop: ...
+    @override
     def new_event_loop(self) -> WebLoop: ...

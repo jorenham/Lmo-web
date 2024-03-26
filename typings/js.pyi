@@ -1,7 +1,6 @@
-# based on https://github.com/pyodide/pyodide/blob/0.24.1/src/py/js.pyi
-
+# ruff: noqa: A002, N801, N802, N803
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, Final, Literal, TypeAlias
+from typing import Any, ClassVar, Final, Literal, overload
 
 from pyodide.ffi import (
     JsArray,
@@ -13,25 +12,24 @@ from pyodide.ffi import (
 )
 from pyodide.webloop import PyodideFuture
 
-# in browser the cancellation token is an int, in node it's a special opaque
-# object.
-_CancellationToken: TypeAlias = int | JsProxy
-_Callback: TypeAlias = Callable[[], Any]
+type _CancelToken = int | JsProxy
+type _AnyCallback = Callable[[], Any]
 
-def setTimeout(cb: _Callback, timeout: int | float) -> _CancellationToken: ...
-def clearTimeout(id: _CancellationToken) -> None: ...
-def setInterval(cb: _Callback, interval: int | float) -> _CancellationToken: ...
-def clearInterval(id: _CancellationToken) -> None: ...
-def fetch(url: str, options: JsProxy | None = ...) -> PyodideFuture[JsFetchResponse]: ...
+# https://github.com/pyodide/pyodide/blob/main/src/py/js.pyi
+
+def setTimeout(cb: _AnyCallback, timeout: float) -> _CancelToken: ...
+def clearTimeout(id: _CancelToken) -> None: ...
+
+def setInterval(cb: _AnyCallback, interval: float) -> _CancelToken: ...
+def clearInterval(id: _CancelToken) -> None: ...
+
+def fetch(
+    url: str,
+    options: JsProxy | None = ...,
+) -> PyodideFuture[JsFetchResponse]: ...
 
 self: Final[Any] = ...
 window: Final[Any] = ...
-
-# Shenanigans to convince skeptical type system to behave correctly:
-#
-# These classes we are declaring are actually JavaScript objects, so the class
-# objects themselves need to be instances of JsProxy. So their type needs to
-# subclass JsProxy. We do this with a custom metaclass.
 
 class _JsMeta(type, JsProxy): ...
 class _JsObject(metaclass=_JsMeta): ...
@@ -57,7 +55,11 @@ class ImageData(_JsObject):
     height: int
 
     @staticmethod
-    def new(width: int, height: int, settings: JsProxy | None = ...) -> ImageData: ...
+    def new(
+        width: int,
+        height: int,
+        settings: JsProxy | None = ...,
+    ) -> ImageData: ...
 
 class _TypedArray(_JsObject):
     @staticmethod
@@ -83,13 +85,39 @@ class document(_JsObject):
     body: JsDomElement
     children: list[JsDomElement]
 
+    @overload
+    @staticmethod
+    def createElement(tagName: Literal['canvas']) -> JsCanvasElement: ...
+    @overload
     @staticmethod
     def createElement(tagName: str) -> JsDomElement: ...
     @staticmethod
     def appendChild(child: JsDomElement) -> None: ...
+
+class JsCanvasElement(JsDomElement):
+    width: int | float
+    height: int | float
+
+    def getContext(
+        self,
+        ctxType: str,
+        *,
+        powerPreference: str = ...,
+        premultipliedAlpha: bool = ...,
+        antialias: bool = ...,
+        alpha: bool = ...,
+        depth: bool = ...,
+        stencil: bool = ...,
+    ) -> Any: ...
 
 class ArrayBuffer(_JsObject):
     @staticmethod
     def isView(x: Any) -> bool: ...
 
 class DOMException(JsException): ...
+
+class Map:
+    @staticmethod
+    def new(a: Iterable[Any]) -> Map: ...
+
+async def sleep(ms: float) -> None: ...

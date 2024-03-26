@@ -1,34 +1,30 @@
-'''
-https://pyodide.org/en/stable/usage/api/python-api/code.html
-'''
+# ruff: noqa: A002
 
 __all__ = (
     'CodeRunner',
     'eval_code',
     'eval_code_async',
     'find_imports',
-    'should_quiet',
     'run_js',
+    'should_quiet',
 )
 
 import ast
 from types import CodeType
-from typing import Any, Literal, Self, TypeAlias
+from typing import Any, Literal, Self
 
+type _ReturnMode = Literal['last_expr', 'last_expr_or_assign', 'none']
+type _Scope = dict[str, Any] | None
 
-# from _pyodide._base
+# https://github.com/pyodide/pyodide/blob/main/src/py/_pyodide/_base.py
 
 def should_quiet(source: str, /) -> bool: ...
 
 def _last_assign_to_expr(mod: ast.Module) -> None: ...
 
-class EvalCodeResultException(Exception):
+class EvalCodeResultException(Exception):  # noqa: N818
     value: Any
-
     def __init__(self, v: Any) -> None: ...
-
-ReturnMode: TypeAlias = Literal['last_expr', 'last_expr_or_assign', 'none']
-_Scope: TypeAlias = dict[str, Any] | None
 
 class CodeRunner:
     ast: ast.Module
@@ -38,7 +34,7 @@ class CodeRunner:
         self,
         source: str,
         *,
-        return_mode: ReturnMode = ...,
+        return_mode: _ReturnMode = ...,
         mode: str = ...,
         quiet_trailing_semicolon: bool = ...,
         filename: str = ...,
@@ -62,7 +58,7 @@ def eval_code(
     globals: _Scope = ...,
     locals: _Scope = ...,
     *,
-    return_mode: ReturnMode = ...,
+    return_mode: _ReturnMode = ...,
     quiet_trailing_semicolon: bool = ...,
     filename: str = ...,
     flags: int = ...,
@@ -73,7 +69,7 @@ async def eval_code_async(
     globals: _Scope = ...,
     locals: _Scope = ...,
     *,
-    return_mode: ReturnMode = ...,
+    return_mode: _ReturnMode = ...,
     quiet_trailing_semicolon: bool = ...,
     filename: str = ...,
     flags: int = ...,
@@ -81,9 +77,6 @@ async def eval_code_async(
 
 def find_imports(source: str) -> list[str]: ...
 
-
-# from pyodide.code
+# https://pyodide.org/en/stable/usage/api/python-api/code.html
 
 def run_js(code: str, /) -> Any: ...
-
-

@@ -1,25 +1,25 @@
+# ruff: noqa: A002, PLW3201
 __all__ = (
+    'HTML',
     'RUNNING_IN_WORKER',
     'PyWorker',
-    'sync',
-    'HTML',
     'display',
     'document',
-    'window',
+    'sync',
     'when',
+    'window',
 )
 
 from collections.abc import Callable
-from typing import IO, Any, Final, NoReturn, Protocol, TypeAlias, TypeVar
+from typing import IO, Any, Final, Protocol
 
 import js as window
 from js import document
 
-
 # /pyscript/pyscript.core/src/stdlib/pyscript/display.py
 
 class _SupportsRepr(Protocol):
-    def __repr__(self) -> str: ...
+    ...
 
 class _SupportsHTML(Protocol):
     def _repr_html_(self) -> str: ...
@@ -54,7 +54,7 @@ class _SupportsFig(Protocol):
 class _SupportsBundle(Protocol):
     def _repr_mimebundle_(self, __fp: IO[bytes], format: str = ...) -> Any: ...
 
-_AnyMIME: TypeAlias = (
+type _AnyMIME = (
     str
     | _SupportsFig
     | _SupportsHTML
@@ -72,34 +72,32 @@ _AnyMIME: TypeAlias = (
 
 class HTML(_SupportsHTML):
     def __init__(self, html: str) -> None: ...
-    def _repr_html_(self) -> str: ...
 
 def display(
-    *values: str | object,
+    *values: _AnyMIME,
     target: str | None = ...,
     append: bool = ...,
 ) -> None: ...
 
+type _Event = object
 
 # /pyscript/pyscript.core/src/stdlib/pyscript/event_handling.py
-_E = TypeVar('_E', bound=object, covariant=True)
-_Listener: TypeAlias = Callable[[_E], None] | Callable[[], None]
+type _Listener[_E: _Event] = Callable[[_E], None] | Callable[[], None]
 
 # raises TypeError when called from a worker
-def when(
+def when[_F: _Listener[Any]](
     event_type: str,
     selector: str | None = ...,
-) -> Callable[[_Listener[_E]], _Listener[_E]] | NoReturn: ...
-
+) -> Callable[[_F], _F]: ...
 
 # /pyscript/pyscript.core/src/stdlib/pyscript/magic_js.py
 RUNNING_IN_WORKER: Final[bool]
 
 # raises TypeError when called from a worker
-def PyWorker(
+def PyWorker(  # noqa: N802
     __file: str,
-    options: dict[str, str | bool | object] | None = ...
-) -> object | NoReturn: ...
+    options: dict[str, str | bool | object] | None = ...,
+) -> object: ...
 
 def current_target() -> str | None: ...
 
