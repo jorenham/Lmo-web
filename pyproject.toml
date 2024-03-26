@@ -18,15 +18,16 @@ Documentation = "https://jorenham.github.io/Lmo-web/"
 "Bug Tracker" = "https://github.com/jorenham/Lmo-web/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-plotly = "^5.18"
-scipy = "^1.11"
-Lmo = ">=0.12.1,<1.0"
+python = ">=3.12,<3.13"
+plotly = "^5.20.0"
+scipy = "^1.12.0"
+Lmo = ">=0.13.0,<1.0"
 
 [tool.poetry.group.dev.dependencies]
-pyright = "^1.1"
-ruff = ">=0.1.6,<1.0"
-codespell = "^2.2"
+pyright = "^1.1.355"
+ruff = ">=0.3.4,<1.0"
+codespell = "^2.2.6"
+
 
 [tool.pyright]
 include = ["lmo_web", "typings"]
@@ -37,34 +38,155 @@ exclude = [
     ".git",
     ".github",
 ]
-stubPath = "./typings"
+stubPath = "typings"
+venvPath = "."
 venv = ".venv"
-pythonVersion = "3.11"
+pythonVersion = "3.12"
+pythonPlatform = "Linux"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = false
 
+deprecateTypingAliases = true
+disableBytesTypePromotions = true
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
+
+reportImplicitOverride = true
+reportImportCycles = true
+reportIncompleteStub = true
+reportInconsistentConstructor = true
+reportInvalidStubStatement = true
+reportMatchNotExhaustive = true
 reportMissingModuleSource = false
+reportMissingTypeArgument = true
+reportMissingTypeStubs = false
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+reportTypeCommentUsage = true
+reportUninitializedInstanceVariable = true
+reportUnnecessaryCast = true
+reportUnnecessaryComparison = true
+reportUnnecessaryContains = true
+reportUnnecessaryIsInstance = true
+reportUnnecessaryTypeIgnoreComment = true
+reportUntypedBaseClass = true
+reportUntypedClassDecorator = true
+reportUntypedFunctionDecorator = true
+reportUntypedNamedTuple = true
+reportUnusedClass = true
+reportUnusedCoroutine = true
+reportUnusedExpression = true
+reportUnusedFunction = true
+reportUnusedVariable = true
 
 
 [tool.ruff]
+src = [
+    "main.py",
+    "lmo_web",
+    "typings"
+]
+target-version = "py312"
+line-length = 79
+indent-width = 4
+show-fixes = true
+force-exclude = true
 extend-exclude = [
+    ".cache",
     ".github",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
     ".vscode",
 ]
-line-length = 79
-src = ["lmo_web"]
-target-version = "py311"
-task-tags = ["TODO", "Todo"]
-typing-modules = ["numpy.typing"]
 
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-ignore-decorators = [
-    "typing.overload",
+[tool.ruff.lint]
+ignore-init-module-imports = true
+preview = true
+select = [
+    "F",        # pyflakes
+    "E",        # pycodestyle error
+    "W",        # pycodestyle warning
+    "I",        # isort
+    "N",        # pep8-naming
+    # "D",        # pydocstyle
+    "UP",       # pyupgrade
+    "YTT",      # flake8-2020
+    "ASYNC",    # flake8-async
+    "S",        # flake8-bandit
+    "BLE",      # flake8-blind-except
+    "B",        # flake8-bugbear
+    "A",        # flake8-builtins
+    "COM",      # flake8-commas
+    "C4",       # flake8-comprehensions
+    "DTZ",      # flake8-datetimez
+    "T10",      # flake8-debugger
+    "EXE",      # flake8-executable
+    "FA",       # flake8-future-annotations
+    "ISC",      # flake8-implicit-str-concat
+    "ICN",      # flake8-import-conventions
+    "LOG",      # flake8-logging
+    "G",        # flake8-logging-format
+    "INP",      # flake8-no-pep420
+    "PIE",      # flake8-pie
+    "T20",      # flake8-print
+    "PYI",      # flake8-pyi
+    "PT",       # flake8-pytest-style
+    "Q",        # flake8-quotes
+    "RSE",      # flake8-raise
+    "RET",      # flake8-return
+    "SLF",      # flake8-self
+    "SLOT",     # flake8-slots
+    "SIM",      # flake8-simplify
+    "TID",      # flake8-tidy-imports
+    "TCH",      # flake8-type-checking
+    "ARG",      # flake8-unused-arguments
+    "PTH",      # flake8-use-pathlib
+    "PD",       # pandas-vet
+    "PGH",      # pygrep-hooks
+    "PL",       # pylint
+    "TRY",      # tryceratops
+    "FLY",      # flynt
+    "NPY",      # numpy
+    "PERF",     # perflint,
+    "FURB",     # refurb
+    "RUF",      # ruff
+]
+extend-ignore = [
+    # flake8-annotations
+    "ANN001",   # missing-type-function-argument (deprecated)
+    "ANN002",   # missing-type-args (deprecated)
+
+    # flake8-bandit
+    "S101",     # assert
+
+    # flake8-unused-arguments
+    "ARG002",   # unused-method-argument
+
+    # pandas-vet
+    "PD010",    # pandas-use-of-dot-pivot-or-unstack
+    "PD013",    # pandas-use-of-dot-stack
+
+    # pylint
+    "PLW1641",  # eq-without-hash (buggy; doesn't consider super)
+]
+typing-modules = [
+    "lmo.typing",
+    "numpy.typing",
+    "typing",
+    "typing_extensions",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"typings/*" = [
+    "PLR0913",  # pylint: too-many-arguments
 ]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 case-sensitive = true
 combine-as-imports = true
 force-wrap-aliases = true
@@ -79,6 +201,7 @@ known-third-party = [
     "scipy",
     "lmo",
 ]
+
 
 [tool.codespell]
 context = 2

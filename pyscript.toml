@@ -1,9 +1,13 @@
 name = "Lmo Web"
-interpreter = "0.24.1"
+author_name = "Joren Hammudoglu"
+author_email = "jhammudoglu@gmail.com"
+license = "BSD-3-Clause"
+
+interpreter = "0.26.0a4"
 packages = [
-    "plotly>=5.18,<6.0",
-    "scipy>=1.11,<2.0",
-    "Lmo>=0.12.1,<1.0",
+    "plotly>=5.20,<6.0",
+    "scipy>=1.12,<2.0",
+    "Lmo>=0.13.0,<1.0",
 ]
 
 [files]
