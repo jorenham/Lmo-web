@@ -13,5 +13,4 @@ packages = [
 [files]
 "{FROM}" = "/lmo_web"
 "{TO}" = "./lmo_web/"
-"{FROM}/__init__.py" = "{TO}"
 "{FROM}/web_storage.py" = "{TO}"
