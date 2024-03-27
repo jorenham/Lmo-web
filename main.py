@@ -1,4 +1,6 @@
+# pyright: basic, reportMissingModuleSource=false
 # ruff: noqa: N803
+
 from __future__ import annotations
 
 import json
@@ -136,7 +138,7 @@ def fig_to_js(fig, config=None):
 def show_plot(fig, target='chart', config=CONFIG):
     # https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
     data = fig_to_js(fig, config=config)
-    return js.Plotly.react(target, data)
+    return js.Plotly.react(target, data)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def init_state() -> None:
@@ -269,7 +271,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         assert not (lb and ub)
         trim = 1 - int(lb), 1 - int(ub)
 
-    l_stats = X.l_stats(trim=trim)
+    l_stats = X.l_stats(trim=trim)  # pyright: ignore[reportAttributeAccessIssue]
 
     # find the minimum trim that result in valid L-stats
     # increment trim on the unbounded side(s) until valid L-stats
@@ -288,7 +290,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         #     trim = min(trim), min(trim)
         trim = trim[0] + 1 - int(lb), trim[1] + 1 - int(ub)
 
-        l_stats = X.l_stats(trim=trim)
+        l_stats = X.l_stats(trim=trim)  # pyright: ignore[reportAttributeAccessIssue]
 
     if trim == (0, 0):
         trim_str = ''
@@ -355,7 +357,7 @@ def update_plot(i: int):
 
     match local_storage['state']['rv'][i]['func']:
         case 'pdf':
-            y = X.pdf(x)
+            y = X.pdf(x)  # pyright: ignore[reportAttributeAccessIssue]
             fname = '$f(x)$'
         case 'cdf':
             y = X.cdf(x)
@@ -450,7 +452,7 @@ def on_rv_change(event):
     params_new = [0.0, 1.0]
 
     rv = RVS[name_new]
-    if rv._shape_info():  # noqa: SLF001
+    if rv._shape_info():  # noqa: SLF001  # pyright: ignore[reportAttributeAccessIssue]
         # TODO: initial shape param values;
         # see ._fitstart() or something
         raise NotImplementedError('shape parameters not supported')
