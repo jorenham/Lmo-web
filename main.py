@@ -80,12 +80,11 @@ RVS: dict[str, distributions.rv_continuous] = {}
 
 # redirect warnings to the console
 
-def _showwarning(  # noqa: PLR0913
+def _showwarning(  # noqa: PLR0913, PLR0917
     message: Warning | str,
     category: type[Warning],
     filename: str,
     lineno: int,
-    *,
     file: TextIO | None = None,
     line: str | None = None,
 ) -> None:
