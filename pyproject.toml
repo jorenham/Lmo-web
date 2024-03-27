@@ -44,7 +44,7 @@ venv = ".venv"
 pythonVersion = "3.12"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
-useLibraryCodeForTypes = false
+useLibraryCodeForTypes = true
 
 deprecateTypingAliases = true
 disableBytesTypePromotions = true
