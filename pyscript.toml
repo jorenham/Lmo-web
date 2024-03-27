@@ -11,7 +11,6 @@ packages = [
 ]
 
 [files]
-"{FROM}" = "/Lmo-web/lmo_web"
+"{FROM}" = "https://jorenham.github.io/Lmo-web/lmo_web"
 "{TO}" = "./lmo_web"
-"{FROM}/__init__.py" = "{TO}/__init__.py"
 "{FROM}/web_storage.py" = "{TO}/web_storage.py"
