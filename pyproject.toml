@@ -162,6 +162,7 @@ extend-ignore = [
     "S101",     # assert
 
     # flake8-unused-arguments
+    "ARG001",   # unused-function-argument
     "ARG002",   # unused-method-argument
 
     # pandas-vet
@@ -170,6 +171,10 @@ extend-ignore = [
 
     # pylint
     "PLW1641",  # eq-without-hash (buggy; doesn't consider super)
+    "PLR2004",  # magic-value-comparison
+
+    # tryceratops
+    "TRY003",   # raise-vanilla-args
 ]
 typing-modules = [
     "lmo.typing",

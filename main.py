@@ -1,19 +1,24 @@
+# ruff: noqa: N803
+from __future__ import annotations
+
 import json
 import warnings
-
-import lmo  # noqa: F401
-import numpy as np
-from lmo.diagnostic import l_ratio_bounds
-from scipy.stats import distributions
-
-import plotly.graph_objects as go
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any, TextIO, cast, overload
 
 import js
-from pyodide.ffi import to_js as _to_js
+import numpy as np
+import plotly.graph_objects as go
+from lmo.diagnostic import l_ratio_bounds
+from pyodide.ffi import to_js
 from pyscript import when
 from pyweb import pydom
+from scipy.stats import distributions
 
 from lmo_web.web_storage import local_storage
+
+if TYPE_CHECKING:
+    from pyodide.ffi import JsArray, JsMap, JsProxy
 
 NUM_x = 1000
 MIN_x = -10
@@ -28,8 +33,14 @@ CONFIG = {
     'doubleClick': 'reset',
     'scrollZoom': False,
     'showAxisDragHandles': False,
-    'modeBarButtonsToRemove': ['zoom', 'zoomin', 'zoomout', 'autoscale', 'resetscale'],
-    'modeBarButtonsToAdd': ['togglespikelines', 'togglehover']
+    'modeBarButtonsToRemove': [
+        'zoom',
+        'zoomin',
+        'zoomout',
+        'autoscale',
+        'resetscale',
+    ],
+    'modeBarButtonsToAdd': ['togglespikelines', 'togglehover'],
 }
 LAYOUT = go.Layout(
     template='plotly_dark',
@@ -40,35 +51,73 @@ LAYOUT = go.Layout(
     dragmode='pan',
     clickmode='none',
     margin=go.layout.Margin(
-        t=0, # top
-        r=0, # right
-        b=1, # bottom
-        l=1, # left (0 causes missing gridlines due to some bug)
+        t=0,  # top
+        r=0,  # right
+        b=1,  # bottom
+        l=1,  # left (0 causes missing gridlines due to some bug)
     ),
 )
+_LAYOUT_MINOR = {
+    'showgrid': True,
+    'ticks': '',
+    'griddash': 'dash',
+    'gridwidth': 1,
+}
 
-TEX_L_STATS = r'''$
+TEX_L_STATS = r"""$
 \begin{{align*}}
     \lambda^{{{0}}}_1 &= {1:.4g} \\
     \lambda^{{{0}}}_2 &= {2:.4g} \\
     \tau^{{{0}}}_3 &= {3:.4g} \\
     \tau^{{{0}}}_4 &= {4:.4g}
 \end{{align*}}
-$'''.strip()
+$""".strip()
 
 RVS: dict[str, distributions.rv_continuous] = {}
 
 
 # redirect warnings to the console
-warnings.showwarning = lambda *a, file=None, **k: js.console.warn(  # type: ignore
-    warnings.formatwarning(*a, **k)
-)
+
+def _showwarning(  # noqa: PLR0913
+    message: Warning | str,
+    category: type[Warning],
+    filename: str,
+    lineno: int,
+    *,
+    file: TextIO | None = None,
+    line: str | None = None,
+) -> None:
+    o = warnings.formatwarning(message, category, filename, lineno, line=line)
+    js.console.warn(o)  # type: ignore  # noqa: PGH003
 
 
-def to_js(data):
-    if data is None or isinstance(data, (bool, int, float, str, bytes)):
-        return data
-    return _to_js(data, dict_converter=js.Object.fromEntries)
+warnings.showwarning = _showwarning
+
+
+type _DictConverter = Callable[[Iterable[JsArray[Any]]], JsProxy]
+
+
+@overload
+def js_object[T:  bool | int | float | str | bytes](obj: T, /) -> T: ...
+@overload
+def js_object[T](obj: list[T] | tuple[T, ...], /) -> JsArray[T]: ...
+@overload
+def js_object[K, V](obj: dict[K, V], /) -> JsMap[K, V]: ...
+@overload
+def js_object(obj: object, /) -> JsProxy: ...
+@overload
+def js_object(obj: Any, /) -> JsProxy: ...
+
+
+def js_object(obj: Any, *, create_pyproxies: bool = True) -> Any:
+    if obj is None or isinstance(obj, bool | int | float | str | bytes):
+        return obj
+
+    return to_js(  # pyright: ignore[reportUnknownVariableType]
+        obj,
+        create_pyproxies=create_pyproxies,
+        dict_converter=cast(_DictConverter, js.Object.fromEntries),
+    )
 
 
 def fig_to_js(fig, config=None):
@@ -81,13 +130,13 @@ def fig_to_js(fig, config=None):
 
     data = json.loads(data_json)
     data['config'] = config
-    return to_js(data)
+    return js_object(data)
 
 
 def show_plot(fig, target='chart', config=CONFIG):
     # https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
     data = fig_to_js(fig, config=config)
-    return js.Plotly.react(target, data)  # type: ignore
+    return js.Plotly.react(target, data)
 
 
 def init_state() -> None:
@@ -111,7 +160,7 @@ def init_rvs():
         rv = getattr(distributions, name)
 
         # TODO: support rv's with shape params
-        if rv._shape_info():  # type: ignore
+        if rv._shape_info():  # noqa: SLF001
             continue
 
         # TODO: support discrete rv's
@@ -122,7 +171,11 @@ def init_rvs():
 
     # TODO: lmo distributions (requires support for shape params)
 
-    for select, rv_state in zip(pydom['.select-rv'], local_storage['state']['rv']):
+    for select, rv_state in zip(
+        pydom['.select-rv'],
+        local_storage['state']['rv'],
+        strict=True,
+    ):
         name_selected = rv_state['name']
         for name in sorted(RVS):
             option = pydom.create('option')
@@ -135,7 +188,11 @@ def init_rvs():
 
 def init_funcs():
     funcs = ['pdf', 'cdf']
-    for select, rv_state in zip(pydom['.select-func'], local_storage['state']['rv']):
+    for select, rv_state in zip(
+        pydom['.select-func'],
+        local_storage['state']['rv'],
+        strict=True,
+    ):
         func_selected = rv_state['func']
         for func in funcs:
             option = pydom.create('option')
@@ -154,7 +211,6 @@ def init_panel():
 
     # display the rv panel
     pydom['#rv'][0].remove_class('d-none')
-
 
 
 def plotting_positions(X: distributions.rv_frozen, n: int = NUM_x):
@@ -185,7 +241,11 @@ def plotting_positions(X: distributions.rv_frozen, n: int = NUM_x):
     p_body = np.linspace(.01, .99, n - 2 * (n // 10))
     x_body = X.ppf(p_body)
     x_tail_a = np.linspace(X.ppf(1 / n**2), x_body[0], n // 10, endpoint=False)
-    x_tail_b = np.linspace(X.ppf(1 - 1 / n**2), x_body[-1], n // 10, endpoint=False)[::-1]
+    x_tail_b = np.linspace(
+        X.ppf(1 - 1 / n**2),
+        x_body[-1], n // 10,
+        endpoint=False,
+    )[::-1]
     return np.r_[x_tail_a, x_body, x_tail_b]
 
 
@@ -199,7 +259,6 @@ def check_l_stats(l_stats, trim=(0, 0)):
 
 
 def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
-    *_, loc, scale = X.args
     lb, ub = np.isfinite(X.support())
 
     if np.array(trim).ndim == 0:
@@ -210,7 +269,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         assert not (lb and ub)
         trim = 1 - int(lb), 1 - int(ub)
 
-    l_stats = X.l_stats(trim=trim)  # type: ignore
+    l_stats = X.l_stats(trim=trim)
 
     # find the minimum trim that result in valid L-stats
     # increment trim on the unbounded side(s) until valid L-stats
@@ -218,7 +277,8 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         abs(l_stats[2]) >= 1 or abs(l_stats[3]) >= 1
         or not check_l_stats(l_stats, trim)
     ):
-        assert not (lb and ub) and max(trim) < 100
+        assert not (lb and ub)
+        assert max(trim) < 100
 
         # if lb and trim[0] >= 1:
         #     trim = trim[0] - 1, trim[1]
@@ -228,7 +288,7 @@ def _annotate_l_stats(X: distributions.rv_frozen, fig, trim=(0, 0)):
         #     trim = min(trim), min(trim)
         trim = trim[0] + 1 - int(lb), trim[1] + 1 - int(ub)
 
-        l_stats = X.l_stats(trim=trim)  # type: ignore
+        l_stats = X.l_stats(trim=trim)
 
     if trim == (0, 0):
         trim_str = ''
@@ -284,24 +344,24 @@ def update_rv_state(i: int, **kwds):
 
 def update_plot(i: int):
     if i != 0:
-        raise NotADirectoryError('multiple RV\'s not supported')
+        raise NotADirectoryError("multiple RV's not supported")
 
-    X = get_rv(i)
+    X = get_rv(i)  # noqa: N806
 
     # get the plotting positions
     x = plotting_positions(X)
 
     # plot the PDF or CDF
 
-    func = local_storage['state']['rv'][i]['func']
-    if func == 'pdf':
-        y = X.pdf(x)  # type: ignore
-        fname = '$f(x)$'
-    elif func == 'cdf':
-        y = X.cdf(x)
-        fname = '$F(x)$'
-    else:
-        raise TypeError(func)
+    match local_storage['state']['rv'][i]['func']:
+        case 'pdf':
+            y = X.pdf(x)
+            fname = '$f(x)$'
+        case 'cdf':
+            y = X.cdf(x)
+            fname = '$F(x)$'
+        case func:
+            raise TypeError(func)
 
     fig = go.Figure(layout=LAYOUT)
 
@@ -321,17 +381,10 @@ def update_plot(i: int):
     x_max = b if ub else min(x[-1], X.ppf(0.999), MAX_x * scale + loc)
     assert x_min < x_max
 
-    minor_layout = {
-        'showgrid': True,
-        'ticks': '',
-        'griddash': 'dash',
-        'gridwidth': 1
-    }
-
     # x-axis
     fig.update_xaxes(
         type='linear',
-        minor=minor_layout,
+        minor=_LAYOUT_MINOR,
         gridwidth=2,
         ticks='',
         ticklabelposition='inside right',
@@ -347,7 +400,7 @@ def update_plot(i: int):
     # y-axis
     fig.update_yaxes(
         type='linear',
-        minor=minor_layout,
+        minor=_LAYOUT_MINOR,
         gridwidth=2,
         ticks='',
         ticklabelposition='inside top',
@@ -397,7 +450,7 @@ def on_rv_change(event):
     params_new = [0.0, 1.0]
 
     rv = RVS[name_new]
-    if rv._shape_info(): # type: ignore
+    if rv._shape_info():  # noqa: SLF001
         # TODO: initial shape param values;
         # see ._fitstart() or something
         raise NotImplementedError('shape parameters not supported')
@@ -408,7 +461,10 @@ def on_rv_change(event):
 
 @when('keydown', '#rv [contenteditable]')
 def on_param_keydown(event):
-    """Prevent non-numeric input, but allow special keys (with len > 1) to pass through."""
+    """
+    Prevent non-numeric input, but allow special keys (with len > 1) to pass
+    through.
+    """
     # TODO: ArrowUp / ArrowDown for increment / decrement
     if len(event.key) == 1 and event.key not in '1234567890-+_.':
         event.preventDefault()
@@ -427,7 +483,7 @@ def on_param_input(event):
         value = float(value_raw)
     except ValueError as e:
         # TODO: display error in the UI
-        print(*e.args)
+        print(*e.args)  # noqa: T201
         return
 
     _, rv_ix_raw, _, param_ix_raw = id_.split('_')
@@ -437,7 +493,7 @@ def on_param_input(event):
     if param_ix == -1 and value <= 0:
         # scale must be positive
         # TODO: display error in the UI
-        print(f'scale must be strictly positive, got {value}')
+        print(f'scale must be strictly positive, got {value}')  # noqa: T201
         return
     if param_ix >= 0 or param_ix < -2:
         # TODO: use rv._argcheck
