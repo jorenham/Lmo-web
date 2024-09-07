@@ -3,11 +3,11 @@ author_name = "Joren Hammudoglu"
 author_email = "jhammudoglu@gmail.com"
 license = "BSD-3-Clause"
 
-interpreter = "0.26.0a4"
+interpreter = "0.27.0a2"
 packages = [
-    "plotly>=5.20,<6.0",
-    "scipy>=1.12,<2.0",
-    "Lmo>=0.13.0,<1.0",
+    "plotly>=5.24,<6.0",
+    "scipy>=1.13.1,<2.0",
+    "Lmo>=0.14.2,<1.0",
 ]
 
 [files]
